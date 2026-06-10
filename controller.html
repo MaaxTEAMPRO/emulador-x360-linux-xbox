@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a1a">
+    <title>ZYOTEC | PRO GT</title>
+    <style>
+        :root {
+            --carbon-bg: #111;
+            --carbon-lines: #222;
+            --dark-grey: #2c2c2c;
+            --medium-grey: #444;
+            --light-grey: #888;
+            --accent-red: #d90429;
+            --accent-yellow: #ffb703;
+            --text-color: #edf2f4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+        }
+
+        body {
+            background-color: var(--carbon-bg);
+            background-image:
+                linear-gradient(45deg, var(--carbon-lines) 25%, transparent 25%),
+                linear-gradient(-45deg, var(--carbon-lines) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, var(--carbon-lines) 75%),
+                linear-gradient(-45deg, transparent 75%, var(--carbon-lines) 75%);
+            background-size: 16px 16px;
+            background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            position: fixed;
+            color: var(--text-color);
+            overscroll-behavior: none;
+        }
+        
+        @media (orientation: portrait) {
+            body::before {
+                content: "🔄 GIRE O CELULAR";
+                white-space: pre;
+                position: fixed;
+                inset: 0;
+                background: #000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 2.5rem;
+                z-index: 9999;
+                text-align: center;
+                line-height: 1.4;
+            }
+        }
+
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 20px;
+            background: linear-gradient(to bottom, #1a1a1a, #111111);
+            border-bottom: 1px solid #000;
+            z-index: 10;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .led {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent-red);
+            border: 1px solid #000;
+            transition: all 0.3s;
+        }
+
+        .led.on {
+            background: #23a85b;
+        }
+        
+        .top-bar-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .brand {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--text-color);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-style: italic;
+        }
+
+        .angle-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 10px;
+            gap: 2px;
+            background: #0a0a0a;
+            padding: 8px 20px;
+            border-radius: 8px;
+            border: 2px solid #444;
+            box-shadow: inset 0 0 10px #000;
+        }
+
+        .angle {
+            font-size: 1.8rem;
+            color: var(--accent-yellow);
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 0 8px rgba(255, 183, 3, 0.7);
+        }
+        
+        .btn-cal {
+            background: var(--dark-grey);
+            border: 1px solid var(--medium-grey);
+            color: var(--text-color);
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-cal:active {
+            background: var(--medium-grey);
+        }
+        
+        .btn-fs {
+            background: transparent;
+            border: 1px solid var(--medium-grey);
+            color: var(--text-color);
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .btn-fs:active {
+            background: var(--medium-grey);
+            transform: scale(0.95);
+        }
+
+        .max-angle-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(46, 125, 50, 0);
+            pointer-events: none;
+            transition: background 0.2s ease;
+            z-index: 5;
+        }
+
+        .max-angle-overlay.active {
+            background: rgba(46, 125, 50, 0.7);
+        }
+
+        .main {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            justify-content: space-between;
+            align-items: center;
+            padding: 60px 15px 15px;
+            gap: 10px;
+        }
+
+        .side-pedals {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 140px;
+            height: 100%;
+        }
+
+        .pedal {
+            flex: 1;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.1s;
+            border: 1px solid #222;
+            border-top: 1px solid #666;
+            box-shadow: inset 0 2px 3px rgba(0,0,0,0.5);
+            cursor: pointer;
+            color: var(--text-color);
+            text-transform: uppercase;
+        }
+
+        .pedal:active {
+            transform: translateY(1px) scale(0.98);
+            border-color: var(--accent-yellow);
+        }
+
+        .brake { background: linear-gradient(145deg, #4a4a4a, #2a2a2a); }
+        .brake:active, .brake.active {
+            background: var(--accent-red);
+            border-color: var(--accent-red);
+            box-shadow: 0 0 20px rgba(217, 4, 41, 0.4);
+        }
+
+        .gas { background: linear-gradient(145deg, #4a4a4a, #2a2a2a); }
+        .gas:active, .gas.active {
+            background: #2e7d32;
+            border-color: #2e7d32;
+            box-shadow: 0 0 20px rgba(46, 125, 50, 0.4);
+        }
+        
+        .middle-controls {
+            flex: 1;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        
+        .extra-buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .extra-btn {
+            background: var(--dark-grey);
+            border: 1px solid var(--medium-grey);
+            color: var(--light-grey);
+            padding: 8px 13px;
+            border-radius: 6px;
+            /*font-size: 0.9rem;*/
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+        .extra-btn:active, .extra-btn.active {
+            background: var(--accent-yellow);
+            color: #000;
+            border-color: #000;
+        }
+        
+        #cc-rearm-toggle.active {
+            background: var(--accent-red);
+            color: var(--text-color);
+            border-color: var(--accent-red);
+            box-shadow: 0 0 10px rgba(217, 4, 41, 0.6);
+        }
+
+        .start-select-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .dpad {
+            width: 130px;
+            height: 130px;
+            position: relative;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+        }
+
+        .dpad-btn {
+            background: var(--dark-grey);
+            border: 1px solid #111;
+            transition: all 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .dpad-btn:active, .dpad-btn.active {
+            background: var(--accent-red);
+            transform: scale(0.95);
+            z-index: 1;
+        }
+
+        .dpad-up { grid-area: 1 / 2 / 2 / 3; border-radius: 6px 6px 0 0; }
+        .dpad-down { grid-area: 3 / 2 / 4 / 3; border-radius: 0 0 6px 6px; }
+        .dpad-left { grid-area: 2 / 1 / 3 / 2; border-radius: 6px 0 0 6px; }
+        .dpad-right { grid-area: 2 / 3 / 3 / 4; border-radius: 0 6px 6px 0; }
+        .dpad-center { grid-area: 2 / 2 / 3 / 3; background: #111; }
+
+        .dpad-btn::after {
+            content: '';
+            display: block;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-color: transparent;
+            transition: border-color 0.1s;
+        }
+        .dpad-up::after {
+            border-width: 0 10px 10px 10px;
+            border-bottom-color: var(--light-grey);
+        }
+        .dpad-down::after {
+            border-width: 10px 10px 0 10px;
+            border-top-color: var(--light-grey);
+        }
+        .dpad-left::after {
+            border-width: 10px 10px 10px 0;
+            border-right-color: var(--light-grey);
+        }
+        .dpad-right::after {
+            border-width: 10px 0 10px 10px;
+            border-left-color: var(--light-grey);
+        }
+
+        .dpad-btn.active.dpad-up::after, .dpad-btn:active.dpad-up::after { border-bottom-color: var(--text-color); }
+        .dpad-btn.active.dpad-down::after, .dpad-btn:active.dpad-down::after { border-top-color: var(--text-color); }
+        .dpad-btn.active.dpad-left::after, .dpad-btn:active.dpad-left::after { border-right-color: var(--text-color); }
+        .dpad-btn.active.dpad-right::after, .dpad-btn:active.dpad-right::after { border-left-color: var(--text-color); }
+
+        .abxy {
+            width: 130px;
+            height: 130px;
+            position: relative;
+        }
+
+        .abxy-btn {
+            position: absolute;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 1px solid #000;
+            font-size: 1.2rem;
+            color: var(--text-color);
+            transition: all 0.1s;
+            box-shadow: inset 0 -3px 4px rgba(0,0,0,0.5), 0 2px 3px rgba(0,0,0,0.4);
+            background: var(--dark-grey);
+        }
+        
+        .abxy-btn:active, .abxy-btn.active {
+            transform: scale(0.97);
+            box-shadow: inset 0 -1px 2px rgba(0,0,0,0.5);
+            filter: brightness(1.2);
+        }
+
+        .abxy-y { top: 0; left: calc(50% - 24px); background: var(--accent-yellow); color: #111; }
+        .abxy-x { top: calc(50% - 24px); left: 0; background: #0077c2; }
+        .abxy-b { top: calc(50% - 24px); right: 0; background: var(--accent-red); }
+        .abxy-a { bottom: 0; left: calc(50% - 24px); background: #2e7d32; }
+        
+        .shoulder-btn {
+            height: 70px;
+            background: linear-gradient(to bottom, #3a3a3a, #2a2a2a);
+            border: 1px solid #111;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+        
+        .shoulder-btn:active, .shoulder-btn.active {
+            background: #444;
+            transform: translateY(1px) scale(0.98);
+        }
+
+        .stick-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .stick-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--dark-grey);
+            border: 1px solid #111;
+            color: var(--light-grey);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.7);
+            transition: all 0.1s;
+            text-transform: uppercase;
+        }
+
+        .stick-btn:active, .stick-btn.active {
+            background: var(--medium-grey);
+            color: #fff;
+            transform: scale(0.95);
+        }
+
+        .r3-group {
+            display: grid;
+            grid-template-columns: 40px 60px 40px;
+            grid-template-rows: 40px 60px 40px;
+            align-items: center;
+            justify-items: center;
+            gap: 2px;
+        }
+
+        .rs-btn {
+            width: 38px;
+            height: 38px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            color: var(--light-grey);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            transition: all 0.1s;
+        }
+        .rs-btn:active, .rs-btn.active {
+            background: var(--accent-yellow);
+            color: #000;
+            border-color: var(--accent-yellow);
+        }
+        .rs-up { grid-area: 1 / 2 / 2 / 3; }
+        .rs-down { grid-area: 3 / 2 / 4 / 3; }
+        .rs-left { grid-area: 2 / 1 / 3 / 2; }
+        .rs-right { grid-area: 2 / 3 / 3 / 4; }
+        .r3-center { grid-area: 2 / 2 / 3 / 3; }
+
+        .throttle-limiter {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            background: #0a0a0a;
+            padding: 5px 8px 8px;
+            border-radius: 8px;
+            border: 2px solid #444;
+            box-shadow: inset 0 0 10px #000;
+            width: 170px;
+        }
+
+        .throttle-limiter-header {
+            font-size: 0.7rem;
+            color: var(--light-grey);
+            text-transform: uppercase;
+            width: 100%;
+            text-align: center;
+            border-bottom: 1px solid #333;
+            padding-bottom: 3px;
+        }
+
+        .throttle-limiter-body {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .throttle-limiter-body button {
+            background: var(--dark-grey);
+            border: 1px solid var(--medium-grey);
+            color: var(--text-color);
+            border-radius: 6px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            width: 36px;
+            height: 32px;
+            transition: all 0.2s;
+        }
+
+        .throttle-limiter-body button:active { background: var(--medium-grey); }
+
+        #throttle-limit-value {
+            font-size: 1.5rem;
+            color: var(--accent-yellow);
+            font-variant-numeric: tabular-nums;
+        }
+
+        #throttle-limit-toggle {
+            width: 100%;
+            font-size: 0.8rem;
+            background: #333;
+        }
+
+        #throttle-limit-toggle.active {
+            background: var(--accent-red);
+        }
+
+        .horizontal-controls {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .horizontal-controls .throttle-limiter {
+            margin-top: 0;
+            width: 170px; /* Default width for the main one */
+        }
+
+        .horizontal-controls .compact-mode-selector {
+            width: 80px; /* More compact width */
+            gap: 5px;
+        }
+
+        .horizontal-controls .compact-mode-selector .extra-btn {
+             height: 68px; /* Match height of the other box */
+             font-size: 1rem;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+        }
+
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="max-angle-overlay" id="max-angle-overlay"></div>
+    
+    <div class="top-bar">
+        <div class="status">
+            <div class="led" id="led"></div>
+            <span id="status">Conectando...</span>
+        </div>
+        <div class="brand">ZYOTEC RACING</div>
+        <div class="top-bar-actions">
+            <button type="button" class="btn-fs" id="fs" title="Tela Cheia">⛶</button>
+            <button type="button" class="btn-cal" id="cal">⚡ CALIBRAR</button>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="side-pedals">
+            <div class="shoulder-btn" data-btn="LB">LB</div>
+            <div class="throttle-limiter" style="width: 100%; margin-bottom: 10px; height: auto;">
+                <div class="throttle-limiter-header">MAX ANGLE</div>
+                <button type="button" class="extra-btn" id="max-angle-toggle" style="height: auto; padding: 10px; font-size: 1.2rem;">60°</button>
+            </div>
+            <div class="pedal brake" id="brake">FREIO</div>
+        </div>
+
+        <div class="middle-controls">
+            <div class="stick-group">
+                <div class="dpad">
+                    <div class="dpad-btn dpad-up" data-btn="up"></div>
+                    <div class="dpad-btn dpad-left" data-btn="left"></div>
+                    <div class="dpad-center"></div>
+                    <div class="dpad-btn dpad-right" data-btn="right"></div>
+                    <div class="dpad-btn dpad-down" data-btn="down"></div>
+                </div>
+                <div class="stick-btn" data-btn="L3">L3</div>
+                <button type="button" class="extra-btn" id="cc-rearm-toggle">CC REARM OFF</button>
+            </div>
+            <div class="extra-buttons">
+                <div class="start-select-group">
+                    <button type="button" class="extra-btn" data-btn="select">SELECT</button>
+                    <button type="button" class="extra-btn" data-btn="start">START</button>
+                </div>
+                <button type="button" class="extra-btn" id="cruise-toggle">CRUISE</button>
+                <div class="angle-info">
+                    <div class="angle" id="angle">0°</div>
+                </div>
+                <div class="horizontal-controls">
+                    <div class="throttle-limiter compact-mode-selector">
+                        <div class="throttle-limiter-header">Brake</div>
+                        <button type="button" class="extra-btn" id="brake-toggle">OFF</button>
+                    </div>
+                    <div class="throttle-limiter">
+                        <div class="throttle-limiter-header">Throttle Limit</div>
+                        <div class="throttle-limiter-body">
+                            <button type="button" id="throttle-limit-down">−</button>
+                            <span id="throttle-limit-value">100%</span>
+                            <button type="button" id="throttle-limit-up">+</button>
+                        </div>
+                        <button type="button" class="extra-btn" id="throttle-limit-toggle">OFF</button>
+                    </div>
+                    <div class="throttle-limiter">
+                        <div class="throttle-limiter-header">Brake Limit</div>
+                        <div class="throttle-limiter-body">
+                            <button type="button" id="brake-limit-down">−</button>
+                            <span id="brake-limit-value">100%</span>
+                            <button type="button" id="brake-limit-up">+</button>
+                        </div>
+                        <button type="button" class="extra-btn" id="brake-limit-toggle">OFF</button>
+                    </div>
+                    <div class="throttle-limiter compact-mode-selector">
+                        <div class="throttle-limiter-header">TCS</div>
+                        <button type="button" class="extra-btn" id="tcs-toggle">OFF</button>
+                    </div>
+                </div>
+            </div>
+            <div class="stick-group">
+                <div class="abxy">
+                    <button type="button" class="abxy-btn abxy-y" data-btn="Y">Y</button>
+                    <button type="button" class="abxy-btn abxy-x" data-btn="X">X</button>
+                    <button type="button" class="abxy-btn abxy-b" data-btn="B">B</button>
+                    <button type="button" class="abxy-btn abxy-a" data-btn="A">A</button>
+                </div>
+                <div class="r3-group">
+                    <div class="rs-btn rs-up" data-btn="rs_up">▲</div>
+                    <div class="rs-btn rs-left" data-btn="rs_left">◀</div>
+                    <div class="stick-btn r3-center" data-btn="R3">R3</div>
+                    <div class="rs-btn rs-right" data-btn="rs_right">▶</div>
+                    <div class="rs-btn rs-down" data-btn="rs_down">▼</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="side-pedals">
+            <div class="shoulder-btn" data-btn="RB">RB</div>
+            <div class="pedal gas" id="gas">GÁS</div>
+        </div>
+    </div>
+
+    <script>
+        const WS_URL = `wss://${window.location.hostname}:8765`;
+        let MAX_ANGLE_DEG = 60;
+        const WHEEL_SEND_INTERVAL_MS = 16;
+        const GAS_MAX = 255;
+        const THROTTLE_STEP = 10;
+
+        let ws = null;
+        let conn = false;
+        let gyro = false;
+        let cal = false;
+        let zero = 0;
+        let wakeLock = null;
+        let cruiseControl = false;
+        let throttleLimit = 100;
+        let brakeLimit = 100;
+        let ccRearmEnabled = false;
+        let cruiseWasActive = false;
+        let isThrottleLimitOn = false;
+        let isBrakeLimitOn = false;
+        let reconnectTimer = null;
+        let lastWheelSend = 0;
+
+        const tcsModes = [
+            { text: 'OFF', value: 0 },
+            { text: '0.5s', value: 0.5 },
+            { text: '1.0s', value: 1.0 },
+            { text: '1.5s', value: 1.5 },
+            { text: '2.0s', value: 2.0 },
+        ];
+        let tcsModeIndex = 0;
+
+        const brakeModes = [
+            { text: 'OFF', value: 0 },
+            { text: '0.6s', value: 0.6 },
+            { text: '1.0s', value: 1.0 },
+            { text: '1.6s', value: 1.6 },
+            { text: '2.2s', value: 2.2 },
+        ];
+        let brakeModeIndex = 0;
+
+        const maxAngles = [60, 120, 180, 220, 260, 300, 360, 420, 480, 540, 600];
+        let maxAngleIndex = 0;
+
+        const $ = id => document.getElementById(id);
+
+        /** Valor máximo de gas a enviar ao servidor (sempre bruto 255). O limite é aplicado no servidor. */
+        function getGasValue() {
+            return GAS_MAX;
+        }
+
+        /** Valor do throttle limit 0–1 para enviar ao servidor (aplica a controle físico e celular). */
+        function getThrottleLimitForServer() {
+            return isThrottleLimitOn ? throttleLimit / 100 : 1.0;
+        }
+
+        /** Valor do brake limit 0–1 para enviar ao servidor. */
+        function getBrakeLimitForServer() {
+            return isBrakeLimitOn ? brakeLimit / 100 : 1.0;
+        }
+
+        function connect() {
+            if (reconnectTimer) {
+                clearTimeout(reconnectTimer);
+                reconnectTimer = null;
+            }
+            ws = new WebSocket(WS_URL);
+            ws.onopen = () => {
+                conn = true;
+                $('led').classList.add('on');
+                $('status').textContent = 'Conectado';
+                // Sincroniza estado inicial com o servidor
+                send({ type: 'tcs_mode',       value: tcsModes[tcsModeIndex].value });
+                send({ type: 'brake_mode',      value: brakeModes[brakeModeIndex].value });
+                send({ type: 'throttle_limit',  value: getThrottleLimitForServer() });
+                send({ type: 'brake_limit',     value: getBrakeLimitForServer() });
+                send({ type: 'max_angle',       value: maxAngles[maxAngleIndex] });
+            };
+            ws.onclose = () => {
+                conn = false;
+                $('led').classList.remove('on');
+                $('status').textContent = 'Reconectando...';
+                reconnectTimer = setTimeout(connect, 2000);
+            };
+            ws.onerror = () => {};
+        }
+        
+        function send(obj) {
+            if (ws?.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify(obj));
+            }
+        }
+        
+        async function enableGyro() {
+            if (gyro) return true;
+            try {
+                if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    const p = await DeviceOrientationEvent.requestPermission();
+                    if (p !== 'granted') {
+                        alert('❌ Permissão negada');
+                        return false;
+                    }
+                }
+                window.addEventListener('deviceorientation', handleGyro, { capture: true });
+                gyro = true;
+                return true;
+            } catch (err) {
+                alert('❌ Erro: ' + (err.message || err));
+                return false;
+            }
+        }
+        
+        function normalizeAngle(deg) {
+            return (deg + 180) % 360 - 180;
+        }
+
+        function handleGyro(e) {
+            if (!conn || !gyro) return;
+            const beta = e.beta ?? 0;
+
+            if (!cal) {
+                $('angle').textContent = `${Math.round(beta)}°`;
+                return;
+            }
+
+            const rel = normalizeAngle(beta - zero);
+            $('angle').textContent = `${Math.round(rel)}°`;
+
+            const overlay = $('max-angle-overlay');
+            overlay.classList.toggle('active', Math.abs(rel) >= MAX_ANGLE_DEG);
+
+            const now = Date.now();
+            if (now - lastWheelSend >= WHEEL_SEND_INTERVAL_MS) {
+                lastWheelSend = now;
+                send({ type: 'wheel', beta });
+            }
+        }
+        
+        async function calibrate() {
+            if (!gyro) {
+                if (!(await enableGyro())) return;
+                await new Promise(r => setTimeout(r, 400));
+            }
+            zero = parseFloat(String($('angle').textContent).replace(/°\s*$/, '')) || 0;
+            cal = true;
+            send({ type: 'calibrate', beta: zero });
+        }
+        
+        async function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                try {
+                    await document.documentElement.requestFullscreen();
+                    if ('wakeLock' in navigator) {
+                        wakeLock = await navigator.wakeLock.request('screen');
+                    }
+                } catch (err) {
+                    console.warn('Tela cheia / wake lock:', err.message);
+                }
+            } else {
+                if (wakeLock) {
+                    await wakeLock.release();
+                    wakeLock = null;
+                }
+                if (document.exitFullscreen) await document.exitFullscreen();
+            }
+        }
+
+        function applyCruiseThrottle() {
+            if (!cruiseControl) return;
+            $('gas').classList.add('active');
+            send({ type: 'button', btn: 'gas', value: getGasValue() });
+        }
+
+        function setCruiseState(active) {
+            if (cruiseControl === active) return;
+
+            cruiseControl = active;
+            $('cruise-toggle').classList.toggle('active', cruiseControl);
+
+            if (cruiseControl) {
+                applyCruiseThrottle();
+            } else {
+                $('gas').classList.remove('active');
+                send({ type: 'button', btn: 'gas', value: 0 });
+            }
+        }
+
+        function toggleCruise() {
+            if (cruiseControl) {
+                cruiseWasActive = false;
+            }
+            setCruiseState(!cruiseControl);
+        }
+
+        function updateThrottleDisplay() {
+            $('throttle-limit-value').textContent = `${throttleLimit}%`;
+        }
+
+        function changeThrottleLimit(delta) {
+            throttleLimit = Math.max(0, Math.min(100, throttleLimit + delta));
+            updateThrottleDisplay();
+            send({ type: 'throttle_limit', value: getThrottleLimitForServer() });
+            if (cruiseControl) applyCruiseThrottle();
+        }
+
+        function toggleThrottleLimit() {
+            isThrottleLimitOn = !isThrottleLimitOn;
+            const btn = $('throttle-limit-toggle');
+            btn.classList.toggle('active', isThrottleLimitOn);
+            btn.textContent = isThrottleLimitOn ? 'ON' : 'OFF';
+            send({ type: 'throttle_limit', value: getThrottleLimitForServer() });
+            if (cruiseControl) applyCruiseThrottle();
+        }
+
+        function updateBrakeDisplay() {
+            $('brake-limit-value').textContent = `${brakeLimit}%`;
+        }
+
+        function changeBrakeLimit(delta) {
+            brakeLimit = Math.max(0, Math.min(100, brakeLimit + delta));
+            updateBrakeDisplay();
+            send({ type: 'brake_limit', value: getBrakeLimitForServer() });
+        }
+
+        function toggleBrakeLimit() {
+            isBrakeLimitOn = !isBrakeLimitOn;
+            const btn = $('brake-limit-toggle');
+            btn.classList.toggle('active', isBrakeLimitOn);
+            btn.textContent = isBrakeLimitOn ? 'ON' : 'OFF';
+            send({ type: 'brake_limit', value: getBrakeLimitForServer() });
+        }
+        
+        function toggleCcRearm() {
+            ccRearmEnabled = !ccRearmEnabled;
+            const btn = $('cc-rearm-toggle');
+            btn.classList.toggle('active', ccRearmEnabled);
+            btn.textContent = ccRearmEnabled ? 'CC REARM ON' : 'CC REARM OFF';
+        }
+
+        function toggleTcs() {
+            tcsModeIndex = (tcsModeIndex + 1) % tcsModes.length;
+            const mode = tcsModes[tcsModeIndex];
+            $('tcs-toggle').textContent = mode.text;
+            send({ type: 'tcs_mode', value: mode.value });
+        }
+
+        function toggleBrake() {
+            brakeModeIndex = (brakeModeIndex + 1) % brakeModes.length;
+            const mode = brakeModes[brakeModeIndex];
+            $('brake-toggle').textContent = mode.text;
+            send({ type: 'brake_mode', value: mode.value });
+        }
+
+        function toggleMaxAngle() {
+            maxAngleIndex = (maxAngleIndex + 1) % maxAngles.length;
+            const angle = maxAngles[maxAngleIndex];
+            MAX_ANGLE_DEG = angle;
+            $('max-angle-toggle').textContent = `${angle}°`;
+            send({ type: 'max_angle', value: angle });
+        }
+
+        function setupButton(el, name) {
+            const isPedal = name === 'gas' || name === 'brake';
+
+            const press = () => {
+                if (name === 'brake') {
+                    if (cruiseControl) {
+                        cruiseWasActive = true;
+                    }
+                    setCruiseState(false);
+                }
+
+                el.classList.add('active');
+                if (isPedal) {
+                    const value = name === 'gas' ? getGasValue() : GAS_MAX;
+                    send({ type: 'button', btn: name, value });
+                } else {
+                    send({ type: 'button', btn: name, pressed: true });
+                }
+            };
+            const release = () => {
+                if (name === 'gas' && cruiseControl) return;
+
+                el.classList.remove('active');
+                if (isPedal) {
+                    if (name === 'brake' && ccRearmEnabled && cruiseWasActive) {
+                        setCruiseState(true);
+                    }
+                    if (name === 'brake') cruiseWasActive = false;
+                    send({ type: 'button', btn: name, value: 0 });
+                } else {
+                    send({ type: 'button', btn: name, pressed: false });
+                }
+            };
+            
+            el.addEventListener('touchstart', e => { e.preventDefault(); press(); }, { passive: false });
+            el.addEventListener('touchend', e => { e.preventDefault(); release(); }, { passive: false });
+            el.addEventListener('touchcancel', e => { e.preventDefault(); release(); }, { passive: false });
+            el.addEventListener('mousedown', e => { e.preventDefault(); press(); });
+            el.addEventListener('mouseup', e => { e.preventDefault(); release(); });
+            el.addEventListener('mouseleave', e => { if (el.classList.contains('active')) release(); });
+        }
+        
+        window.addEventListener('load', () => {
+            connect();
+            $('cal').addEventListener('click', calibrate);
+            $('fs').addEventListener('click', toggleFullScreen);
+            
+            $('tcs-toggle').textContent = tcsModes[tcsModeIndex].text;
+            $('brake-toggle').textContent = brakeModes[brakeModeIndex].text;
+            $('max-angle-toggle').textContent = `${maxAngles[maxAngleIndex]}°`;
+
+            setupButton($('brake'), 'brake');
+            setupButton($('gas'), 'gas');
+            
+            document.querySelectorAll('[data-btn]').forEach(el => {
+                setupButton(el, el.dataset.btn);
+            });
+
+            $('throttle-limit-down').addEventListener('click', () => changeThrottleLimit(-THROTTLE_STEP));
+            $('throttle-limit-up').addEventListener('click', () => changeThrottleLimit(THROTTLE_STEP));
+            $('throttle-limit-toggle').addEventListener('click', toggleThrottleLimit);
+            $('brake-limit-down').addEventListener('click', () => changeBrakeLimit(-THROTTLE_STEP));
+            $('brake-limit-up').addEventListener('click', () => changeBrakeLimit(THROTTLE_STEP));
+            $('brake-limit-toggle').addEventListener('click', toggleBrakeLimit);
+            $('cruise-toggle').addEventListener('click', toggleCruise);
+            $('cc-rearm-toggle').addEventListener('click', toggleCcRearm);
+            $('tcs-toggle').addEventListener('click', toggleTcs);
+            $('brake-toggle').addEventListener('click', toggleBrake);
+            $('max-angle-toggle').addEventListener('click', toggleMaxAngle);
+            document.body.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+            document.body.addEventListener('contextmenu', e => e.preventDefault());
+        });
+    </script>
+</body>
+</html>
